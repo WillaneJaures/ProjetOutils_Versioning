@@ -33,7 +33,6 @@ if upload_file is not None:
 
         # Select target variable
         target = st.selectbox("Select the target column:", df.columns)
-
         # Identify if it's a regression or classification problem
         is_classification = df[target].nunique() <= 2  # Binary classification if 2 unique values
 
