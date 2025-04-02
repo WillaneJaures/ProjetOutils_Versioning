@@ -1,0 +1,6 @@
+[core]
+    remote = dvc_exam
+['remote "dvc_exam"']
+    url = gdrive://1G9NcmC0PfQn1LYnYR7M8G5EH_8LslkyE
+    gdrive_use_service_account = true
+    gdrive_service_account_json_file_path = ../keydvc.json
