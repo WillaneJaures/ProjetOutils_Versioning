@@ -1,0 +1,182 @@
+{% extends 'base.html' %}
+{% load custom_filters %}
+
+{% block title %}Tableau de bord{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center">
+            <h4 class="mb-0">
+                <i class="fas fa-tachometer-alt me-2"></i>Tableau de bord
+            </h4>
+            <a href="{% url 'versionning:upload_csv' %}" class="btn btn-primary">
+                <i class="fas fa-upload me-2"></i>Charger un nouveau fichier
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Fichiers CSV chargés</h5>
+            </div>
+            <div class="card-body">
+                {% if csv_files %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Nom du fichier</th>
+                                <th>Date</th>
+                                <th>Lignes</th>
+                                <th>Colonnes</th>
+                                <th>Statut</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for csv in csv_files %}
+                            <tr>
+                                <td>{{ csv.filename }}</td>
+                                <td>{{ csv.created_at|date:"d/m/Y H:i" }}</td>
+                                <td>{{ csv.row_count }}</td>
+                                <td>{{ csv.column_count }}</td>
+                                <td>
+                                    {% if csv.is_preprocessed %}
+                                    <span class="badge bg-success">Prétraité</span>
+                                    {% else %}
+                                    <span class="badge bg-warning">Non prétraité</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <div class="btn-group">
+                                        <a href="{% url 'versionning:preprocess_data' csv.id %}" class="btn btn-sm btn-outline-primary">
+                                            <i class="fas fa-cogs"></i>
+                                        </a>
+                                        <a href="{% url 'versionning:train_model' csv.id %}" class="btn btn-sm btn-outline-success">
+                                            <i class="fas fa-brain"></i>
+                                        </a>
+                                        <a href="{% url 'versionning:delete_csv' csv.id %}" class="btn btn-sm btn-outline-danger" 
+                                           onclick="return confirm('Êtes-vous sûr de vouloir supprimer ce fichier ? Cette action est irréversible.')">
+                                            <i class="fas fa-trash"></i>
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <p class="text-muted mb-0">Aucun fichier CSV n'a été chargé.</p>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Modèles récents</h5>
+            </div>
+            <div class="card-body">
+                {% if recent_models %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Algorithme</th>
+                                <th>Dataset</th>
+                                <th>Type</th>
+                                <th>Score</th>
+                                <th>Date</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for model in recent_models %}
+                            <tr>
+                                <td>{{ model.algorithm }}</td>
+                                <td>{{ model.csv_file.filename }}</td>
+                                <td>
+                                    {% if model.csv_file.is_classification %}
+                                    <span class="badge bg-info">Classification</span>
+                                    {% else %}
+                                    <span class="badge bg-primary">Régression</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if model.csv_file.is_classification %}
+                                    {{ model.accuracy|floatformat:2 }}%
+                                    {% else %}
+                                    {{ model.r2_score|floatformat:4 }}
+                                    {% endif %}
+                                </td>
+                                <td>{{ model.created_at|date:"d/m/Y H:i" }}</td>
+                                <td>
+                                    <div class="btn-group">
+                                        <a href="{% url 'versionning:model_detail' model.id %}" class="btn btn-sm btn-outline-primary">
+                                            <i class="fas fa-info-circle"></i>
+                                        </a>
+                                        <a href="{% url 'versionning:model_results' model.id %}" class="btn btn-sm btn-outline-success">
+                                            <i class="fas fa-chart-line"></i>
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <p class="text-muted mb-0">Aucun modèle n'a été entraîné.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Statistiques</h5>
+            </div>
+            <div class="card-body">
+                <ul class="list-group list-group-flush">
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        Fichiers CSV
+                        <span class="badge bg-primary rounded-pill">{{ total_files }}</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        Fichiers prétraités
+                        <span class="badge bg-success rounded-pill">{{ preprocessed_files }}</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        Modèles entraînés
+                        <span class="badge bg-info rounded-pill">{{ total_models }}</span>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        {% if latest_csv %}
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Dernier fichier chargé</h5>
+            </div>
+            <div class="card-body">
+                <h6 class="card-subtitle mb-2 text-muted">{{ latest_csv.filename }}</h6>
+                <p class="card-text">
+                    <small class="text-muted">Chargé le {{ latest_csv.created_at|date:"d/m/Y à H:i" }}</small>
+                </p>
+                <ul class="list-unstyled mb-0">
+                    <li><i class="fas fa-table me-2"></i>{{ latest_csv.row_count }} lignes</li>
+                    <li><i class="fas fa-columns me-2"></i>{{ latest_csv.column_count }} colonnes</li>
+                    <li><i class="fas fa-bullseye me-2"></i>Cible : {{ latest_csv.target }}</li>
+                </ul>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %} 

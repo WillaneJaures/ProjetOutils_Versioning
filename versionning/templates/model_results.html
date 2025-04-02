@@ -1,0 +1,199 @@
+{% extends 'base.html' %}
+{% load custom_filters %}
+
+{% block title %}Résultats du modèle{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center">
+            <h4 class="mb-0">
+                <i class="fas fa-chart-line me-2"></i>Résultats du modèle
+            </h4>
+            <a href="{% url 'versionning:model_detail' trained_model.id %}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left me-2"></i>Retour aux détails
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        {% if trained_model.is_classification %}
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-chart-pie me-2"></i>Matrice de confusion
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="text-center">
+                    <img src="data:image/png;base64,{{ plots.confusion_matrix }}" 
+                         class="img-fluid" alt="Matrice de confusion">
+                </div>
+            </div>
+        </div>
+
+        <div class="card mt-4">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-chart-line me-2"></i>Courbe ROC
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="text-center">
+                    <img src="data:image/png;base64,{{ plots.roc_curve }}" 
+                         class="img-fluid" alt="Courbe ROC">
+                </div>
+            </div>
+        </div>
+        {% else %}
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-chart-line me-2"></i>Prédictions vs Réalité
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="text-center">
+                    <img src="data:image/png;base64,{{ plots.predictions }}" 
+                         class="img-fluid" alt="Prédictions vs Réalité">
+                </div>
+            </div>
+        </div>
+
+        <div class="card mt-4">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-chart-bar me-2"></i>Distribution des erreurs
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="text-center">
+                    <img src="data:image/png;base64,{{ plots.error_distribution }}" 
+                         class="img-fluid" alt="Distribution des erreurs">
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <div class="card mt-4">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-chart-bar me-2"></i>Importance des features
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="text-center">
+                    <img src="data:image/png;base64,{{ plots.feature_importance }}" 
+                         class="img-fluid" alt="Importance des features">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-chart-pie me-2"></i>Métriques de performance
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if trained_model.is_classification %}
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th>Métrique</th>
+                                <th>Valeur</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Accuracy</td>
+                                <td>{{ trained_model.accuracy|floatformat:3 }}</td>
+                            </tr>
+                            <tr>
+                                <td>Precision</td>
+                                <td>{{ trained_model.precision|floatformat:3 }}</td>
+                            </tr>
+                            <tr>
+                                <td>Recall</td>
+                                <td>{{ trained_model.recall|floatformat:3 }}</td>
+                            </tr>
+                            <tr>
+                                <td>F1-Score</td>
+                                <td>{{ trained_model.f1_score|floatformat:3 }}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th>Métrique</th>
+                                <th>Valeur</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>R² Score</td>
+                                <td>{{ trained_model.r2_score|floatformat:3 }}</td>
+                            </tr>
+                            <tr>
+                                <td>MSE</td>
+                                <td>{{ trained_model.mse|floatformat:3 }}</td>
+                            </tr>
+                            <tr>
+                                <td>RMSE</td>
+                                <td>{{ trained_model.rmse|floatformat:3 }}</td>
+                            </tr>
+                            <tr>
+                                <td>MAE</td>
+                                <td>{{ trained_model.mae|floatformat:3 }}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="card mt-4">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-info-circle me-2"></i>Informations sur le modèle
+                </h5>
+            </div>
+            <div class="card-body">
+                <ul class="list-unstyled">
+                    <li><i class="fas fa-brain me-2"></i>Algorithme : {{ trained_model.algorithm }}</li>
+                    <li><i class="fas fa-clock me-2"></i>Temps d'entraînement : {{ trained_model.training_time|floatformat:2 }}s</li>
+                    <li><i class="fas fa-calendar me-2"></i>Date : {{ trained_model.created_at|date:"d/m/Y H:i" }}</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="card mt-4">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-download me-2"></i>Exporter les résultats
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    <a href="{% url 'versionning:export_results' trained_model.id 'csv' %}" class="btn btn-outline-primary">
+                        <i class="fas fa-file-csv me-2"></i>Exporter en CSV
+                    </a>
+                    <a href="{% url 'versionning:export_results' trained_model.id 'pdf' %}" class="btn btn-outline-danger">
+                        <i class="fas fa-file-pdf me-2"></i>Exporter en PDF
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

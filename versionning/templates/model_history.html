@@ -1,0 +1,224 @@
+{% extends 'base.html' %}
+{% load custom_filters %}
+
+{% block title %}Historique des modèles{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center">
+            <h4 class="mb-0">
+                <i class="fas fa-history me-2"></i>Historique des modèles
+            </h4>
+            <a href="{% url 'versionning:dashboard' %}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left me-2"></i>Retour au tableau de bord
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-3">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-filter me-2"></i>Filtres
+                </h5>
+            </div>
+            <div class="card-body">
+                <form method="get">
+                    <div class="mb-3">
+                        <label class="form-label">Type de modèle</label>
+                        <div class="form-check">
+                            <input type="radio" name="model_type" value="all" class="form-check-input" id="type_all"
+                                   {% if not request.GET.model_type or request.GET.model_type == 'all' %}checked{% endif %}>
+                            <label class="form-check-label" for="type_all">
+                                Tous
+                            </label>
+                        </div>
+                        <div class="form-check">
+                            <input type="radio" name="model_type" value="classification" class="form-check-input" id="type_classification"
+                                   {% if request.GET.model_type == 'classification' %}checked{% endif %}>
+                            <label class="form-check-label" for="type_classification">
+                                Classification
+                            </label>
+                        </div>
+                        <div class="form-check">
+                            <input type="radio" name="model_type" value="regression" class="form-check-input" id="type_regression"
+                                   {% if request.GET.model_type == 'regression' %}checked{% endif %}>
+                            <label class="form-check-label" for="type_regression">
+                                Régression
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Algorithme</label>
+                        <select name="algorithm" class="form-select">
+                            <option value="">Tous</option>
+                            <option value="random_forest" {% if request.GET.algorithm == 'random_forest' %}selected{% endif %}>
+                                Random Forest
+                            </option>
+                            <option value="decision_tree" {% if request.GET.algorithm == 'decision_tree' %}selected{% endif %}>
+                                Decision Tree
+                            </option>
+                            <option value="knn" {% if request.GET.algorithm == 'knn' %}selected{% endif %}>
+                                K-Nearest Neighbors
+                            </option>
+                            <option value="svm" {% if request.GET.algorithm == 'svm' %}selected{% endif %}>
+                                Support Vector Machine
+                            </option>
+                            <option value="logistic_regression" {% if request.GET.algorithm == 'logistic_regression' %}selected{% endif %}>
+                                Logistic Regression
+                            </option>
+                            <option value="linear_regression" {% if request.GET.algorithm == 'linear_regression' %}selected{% endif %}>
+                                Linear Regression
+                            </option>
+                            <option value="ridge" {% if request.GET.algorithm == 'ridge' %}selected{% endif %}>
+                                Ridge Regression
+                            </option>
+                            <option value="lasso" {% if request.GET.algorithm == 'lasso' %}selected{% endif %}>
+                                Lasso Regression
+                            </option>
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Performance minimale</label>
+                        <input type="number" name="min_score" class="form-control" step="0.01" min="0" max="1"
+                               value="{{ request.GET.min_score|default:'' }}" placeholder="0.0">
+                    </div>
+
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-search me-2"></i>Filtrer
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-9">
+        {% if models %}
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-table me-2"></i>Liste des modèles
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Nom</th>
+                                <th>Type</th>
+                                <th>Algorithme</th>
+                                <th>Performance</th>
+                                <th>Date</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for model in models %}
+                            <tr>
+                                <td>{{ model.name }}</td>
+                                <td>
+                                    {% if model.is_classification %}
+                                    <span class="badge bg-info">Classification</span>
+                                    {% else %}
+                                    <span class="badge bg-primary">Régression</span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ model.algorithm }}</td>
+                                <td>
+                                    {% if model.is_classification %}
+                                    {{ model.accuracy|floatformat:3 }}
+                                    {% else %}
+                                    {{ model.r2_score|floatformat:3 }}
+                                    {% endif %}
+                                </td>
+                                <td>{{ model.created_at|date:"d/m/Y H:i" }}</td>
+                                <td>
+                                    <div class="btn-group">
+                                        <a href="{% url 'versionning:model_detail' model.id %}" 
+                                           class="btn btn-sm btn-outline-primary"
+                                           title="Voir les détails">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
+                                        <a href="{% url 'versionning:model_results' model.id %}" 
+                                           class="btn btn-sm btn-outline-success"
+                                           title="Voir les résultats">
+                                            <i class="fas fa-chart-line"></i>
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                {% if is_paginated %}
+                <nav aria-label="Navigation des pages" class="mt-4">
+                    <ul class="pagination justify-content-center">
+                        {% if page_obj.has_previous %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page=1{% if request.GET.model_type %}&model_type={{ request.GET.model_type }}{% endif %}{% if request.GET.algorithm %}&algorithm={{ request.GET.algorithm }}{% endif %}{% if request.GET.min_score %}&min_score={{ request.GET.min_score }}{% endif %}">
+                                <i class="fas fa-angle-double-left"></i>
+                            </a>
+                        </li>
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if request.GET.model_type %}&model_type={{ request.GET.model_type }}{% endif %}{% if request.GET.algorithm %}&algorithm={{ request.GET.algorithm }}{% endif %}{% if request.GET.min_score %}&min_score={{ request.GET.min_score }}{% endif %}">
+                                <i class="fas fa-angle-left"></i>
+                            </a>
+                        </li>
+                        {% endif %}
+
+                        {% for num in page_obj.paginator.page_range %}
+                        {% if page_obj.number == num %}
+                        <li class="page-item active">
+                            <span class="page-link">{{ num }}</span>
+                        </li>
+                        {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ num }}{% if request.GET.model_type %}&model_type={{ request.GET.model_type }}{% endif %}{% if request.GET.algorithm %}&algorithm={{ request.GET.algorithm }}{% endif %}{% if request.GET.min_score %}&min_score={{ request.GET.min_score }}{% endif %}">
+                                {{ num }}
+                            </a>
+                        </li>
+                        {% endif %}
+                        {% endfor %}
+
+                        {% if page_obj.has_next %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if request.GET.model_type %}&model_type={{ request.GET.model_type }}{% endif %}{% if request.GET.algorithm %}&algorithm={{ request.GET.algorithm }}{% endif %}{% if request.GET.min_score %}&min_score={{ request.GET.min_score }}{% endif %}">
+                                <i class="fas fa-angle-right"></i>
+                            </a>
+                        </li>
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if request.GET.model_type %}&model_type={{ request.GET.model_type }}{% endif %}{% if request.GET.algorithm %}&algorithm={{ request.GET.algorithm }}{% endif %}{% if request.GET.min_score %}&min_score={{ request.GET.min_score }}{% endif %}">
+                                <i class="fas fa-angle-double-right"></i>
+                            </a>
+                        </li>
+                        {% endif %}
+                    </ul>
+                </nav>
+                {% endif %}
+            </div>
+        </div>
+        {% else %}
+        <div class="card">
+            <div class="card-body text-center">
+                <i class="fas fa-robot fa-3x text-muted mb-3"></i>
+                <h5>Aucun modèle trouvé</h5>
+                <p class="text-muted">Aucun modèle ne correspond à vos critères de recherche.</p>
+                <a href="{% url 'versionning:dashboard' %}" class="btn btn-primary">
+                    <i class="fas fa-arrow-left me-2"></i>Retour au tableau de bord
+                </a>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %} 

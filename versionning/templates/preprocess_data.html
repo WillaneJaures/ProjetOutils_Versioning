@@ -1,0 +1,177 @@
+{% extends 'base.html' %}
+{% load custom_filters %}
+
+{% block title %}Prétraitement des données{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center">
+            <h4 class="mb-0">
+                <i class="fas fa-cogs me-2"></i>Prétraitement des données
+            </h4>
+            <a href="{% url 'versionning:dashboard' %}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left me-2"></i>Retour au tableau de bord
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-file-csv me-2"></i>Informations sur le fichier
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6>Informations générales</h6>
+                        <ul class="list-unstyled">
+                            <li><i class="fas fa-file me-2"></i>Nom : {{ csv.file.name|filename }}</li>
+                            <li><i class="fas fa-table me-2"></i>Lignes : {{ csv.n_rows }}</li>
+                            <li><i class="fas fa-columns me-2"></i>Colonnes : {{ csv.n_columns }}</li>
+                        </ul>
+                    </div>
+                    <div class="col-md-6">
+                        <h6>Colonnes sélectionnées</h6>
+                        <ul class="list-unstyled">
+                            <li><i class="fas fa-bullseye me-2"></i>Target : {{ csv.target }}</li>
+                            <li><i class="fas fa-list me-2"></i>Features : {{ csv.features }}</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card mt-4">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-sliders-h me-2"></i>Options de prétraitement
+                </h5>
+            </div>
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+                    
+                    {% if form.non_field_errors %}
+                    <div class="alert alert-danger">
+                        {% for error in form.non_field_errors %}
+                        <p class="mb-0">{{ error }}</p>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+
+                    <div class="mb-3">
+                        <label class="form-label">Gestion des valeurs manquantes</label>
+                        <div class="form-check">
+                            <input type="radio" name="missing_values" value="mean" class="form-check-input" id="missing_mean" checked>
+                            <label class="form-check-label" for="missing_mean">
+                                Remplacer par la moyenne (variables numériques)
+                            </label>
+                        </div>
+                        <div class="form-check">
+                            <input type="radio" name="missing_values" value="mode" class="form-check-input" id="missing_mode">
+                            <label class="form-check-label" for="missing_mode">
+                                Remplacer par le mode (variables catégorielles)
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Encodage des variables catégorielles</label>
+                        <div class="form-check">
+                            <input type="radio" name="encoding" value="onehot" class="form-check-input" id="encoding_onehot" checked>
+                            <label class="form-check-label" for="encoding_onehot">
+                                One-Hot Encoding
+                            </label>
+                        </div>
+                        <div class="form-check">
+                            <input type="radio" name="encoding" value="label" class="form-check-input" id="encoding_label">
+                            <label class="form-check-label" for="encoding_label">
+                                Label Encoding
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Normalisation des variables numériques</label>
+                        <div class="form-check">
+                            <input type="radio" name="scaling" value="standard" class="form-check-input" id="scaling_standard" checked>
+                            <label class="form-check-label" for="scaling_standard">
+                                StandardScaler (moyenne = 0, écart-type = 1)
+                            </label>
+                        </div>
+                        <div class="form-check">
+                            <input type="radio" name="scaling" value="minmax" class="form-check-input" id="scaling_minmax">
+                            <label class="form-check-label" for="scaling_minmax">
+                                MinMaxScaler (entre 0 et 1)
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Sélection des features</label>
+                        <div class="form-check">
+                            <input type="checkbox" name="feature_selection" value="true" class="form-check-input" id="feature_selection">
+                            <label class="form-check-label" for="feature_selection">
+                                Activer la sélection automatique des features
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-magic me-2"></i>Appliquer le prétraitement
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-chart-bar me-2"></i>Statistiques des données
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if csv.statistics %}
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th>Colonne</th>
+                                <th>Type</th>
+                                <th>Valeurs manquantes</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for col, stats in csv.statistics.items %}
+                            <tr>
+                                <td>{{ col }}</td>
+                                <td>
+                                    {% if col in csv.numerical_columns %}
+                                    <span class="badge bg-primary">Numérique</span>
+                                    {% else %}
+                                    <span class="badge bg-info">Catégorielle</span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ stats.missing_count }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <p class="text-muted">Aucune statistique disponible.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

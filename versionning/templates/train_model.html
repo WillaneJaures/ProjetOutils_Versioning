@@ -1,0 +1,182 @@
+{% extends 'base.html' %}
+{% load custom_filters %}
+
+{% block title %}Entraîner un modèle{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <h1 class="mb-4">
+        <i class="fas fa-brain me-2"></i>Entraîner un modèle
+    </h1>
+
+    <!-- Informations sur le fichier -->
+    <div class="card mb-4">
+        <div class="card-header bg-primary text-white">
+            <h5 class="card-title mb-0">
+                <i class="fas fa-info-circle me-2"></i>Informations sur le fichier
+            </h5>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <h6 class="mb-3">Informations générales</h6>
+                    <ul class="list-group">
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            <span>Nom :</span>
+                            <span class="badge bg-primary">{{ file_info.name }}</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            <span>Lignes :</span>
+                            <span class="badge bg-primary">{{ file_info.rows }}</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            <span>Colonnes :</span>
+                            <span class="badge bg-primary">{{ file_info.columns }}</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            <span>Valeurs manquantes :</span>
+                            <span class="badge bg-primary">{{ file_info.missing_values }}</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            <span>Taille mémoire :</span>
+                            <span class="badge bg-primary">{{ file_info.memory_usage }}</span>
+                        </li>
+                    </ul>
+                </div>
+                <div class="col-md-6">
+                    <h6 class="mb-3">Colonnes sélectionnées</h6>
+                    <ul class="list-group">
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            <span>Target :</span>
+                            <span class="badge bg-success">{{ file_info.target }}</span>
+                        </li>
+                        <li class="list-group-item">
+                            <span>Features :</span>
+                            <div class="mt-2">
+                                {% for feature in file_info.features %}
+                                <span class="badge bg-info me-1">{{ feature }}</span>
+                                {% endfor %}
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Statistiques des colonnes -->
+    <div class="card mb-4">
+        <div class="card-header bg-info text-white">
+            <h5 class="card-title mb-0">
+                <i class="fas fa-chart-bar me-2"></i>Statistiques des colonnes
+            </h5>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Colonne</th>
+                            <th>Type</th>
+                            <th>Valeurs manquantes</th>
+                            <th>Valeurs uniques</th>
+                            <th>Moyenne</th>
+                            <th>Écart-type</th>
+                            <th>Min</th>
+                            <th>Max</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for col, stats in column_stats.items %}
+                        <tr>
+                            <td>{{ col }}</td>
+                            <td>{{ stats.type }}</td>
+                            <td>{{ stats.missing }}</td>
+                            <td>{{ stats.unique }}</td>
+                            <td>{{ stats.mean|default:'-' }}</td>
+                            <td>{{ stats.std|default:'-' }}</td>
+                            <td>{{ stats.min|default:'-' }}</td>
+                            <td>{{ stats.max|default:'-' }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Formulaire d'entraînement -->
+    <div class="card">
+        <div class="card-header bg-success text-white">
+            <h5 class="card-title mb-0">
+                <i class="fas fa-cogs me-2"></i>Configuration du modèle
+            </h5>
+        </div>
+        <div class="card-body">
+            <form method="post">
+                {% csrf_token %}
+                
+                {% if not is_preprocessed %}
+                <div class="alert alert-warning">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    Attention : Les données n'ont pas été prétraitées. Il est recommandé de prétraiter les données avant l'entraînement.
+                </div>
+                {% endif %}
+
+                {% for field in form %}
+                <div class="mb-3">
+                    <label for="{{ field.id_for_label }}" class="form-label">{{ field.label }}</label>
+                    {{ field }}
+                    {% if field.help_text %}
+                    <div class="form-text">{{ field.help_text }}</div>
+                    {% endif %}
+                    {% if field.errors %}
+                    <div class="alert alert-danger">
+                        {{ field.errors }}
+                    </div>
+                    {% endif %}
+                </div>
+                {% endfor %}
+
+                <div class="d-grid gap-2">
+                    <button type="submit" class="btn btn-success">
+                        <i class="fas fa-play me-2"></i>Lancer l'entraînement
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Mise à jour des informations sur l'algorithme lors de la sélection
+    const algorithmSelect = document.getElementById('algorithm_select');
+    const algorithmInfo = document.getElementById('algorithm_info');
+    
+    algorithmSelect.addEventListener('change', function() {
+        const selectedAlgorithm = this.value;
+        const algorithmDescriptions = {
+            'random_forest': 'Ensemble d\'arbres de décision, robuste et performant.',
+            'decision_tree': 'Arbre de décision simple et interprétable.',
+            'knn': 'Classification basée sur les voisins les plus proches.',
+            'svm': 'Machine à vecteurs de support, efficace pour les données complexes.',
+            'logistic_regression': 'Modèle linéaire simple pour la classification.',
+            'linear_regression': 'Modèle linéaire simple pour la régression.',
+            'ridge': 'Régression linéaire avec régularisation L2.',
+            'lasso': 'Régression linéaire avec régularisation L1.'
+        };
+        
+        const description = algorithmDescriptions[selectedAlgorithm];
+        if (description) {
+            algorithmInfo.innerHTML = `
+                <h6>${selectedAlgorithm.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}</h6>
+                <p class="small text-muted mb-0">${description}</p>
+            `;
+        }
+    });
+});
+</script>
+{% endblock %}

@@ -1,0 +1,204 @@
+{% extends 'base.html' %}
+{% load custom_filters %}
+
+{% block title %}Détails du modèle{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center">
+            <h4 class="mb-0">
+                <i class="fas fa-info-circle me-2"></i>Détails du modèle
+            </h4>
+            <a href="{% url 'versionning:dashboard' %}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left me-2"></i>Retour au tableau de bord
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-robot me-2"></i>Informations générales
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6>Caractéristiques du modèle</h6>
+                        <ul class="list-unstyled">
+                            <li><i class="fas fa-brain me-2"></i>Nom : {{ model.name }}</li>
+                            <li><i class="fas fa-code me-2"></i>Algorithme : {{ model.algorithm }}</li>
+                            <li><i class="fas fa-tag me-2"></i>Type : 
+                                {% if model.is_classification %}
+                                <span class="badge bg-info">Classification</span>
+                                {% else %}
+                                <span class="badge bg-primary">Régression</span>
+                                {% endif %}
+                            </li>
+                            <li><i class="fas fa-clock me-2"></i>Date d'entraînement : {{ model.created_at|date:"d/m/Y H:i" }}</li>
+                        </ul>
+                    </div>
+                    <div class="col-md-6">
+                        <h6>Données d'entraînement</h6>
+                        <ul class="list-unstyled">
+                            <li><i class="fas fa-file-csv me-2"></i>Fichier : {{ model.csv_file.file.name|filename }}</li>
+                            <li><i class="fas fa-table me-2"></i>Lignes : {{ model.csv_file.n_rows }}</li>
+                            <li><i class="fas fa-columns me-2"></i>Features : {{ model.csv_file.features }}</li>
+                            <li><i class="fas fa-bullseye me-2"></i>Target : {{ model.csv_file.target }}</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card mt-4">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-chart-line me-2"></i>Métriques de performance
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if model.is_classification %}
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="card bg-light">
+                            <div class="card-body text-center">
+                                <h6 class="card-title">Accuracy</h6>
+                                <h3 class="mb-0">{{ model.accuracy|floatformat:3 }}</h3>
+                                <p class="text-muted small mb-0">Précision globale</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card bg-light">
+                            <div class="card-body text-center">
+                                <h6 class="card-title">F1-Score</h6>
+                                <h3 class="mb-0">{{ model.f1_score|floatformat:3 }}</h3>
+                                <p class="text-muted small mb-0">Score F1 moyen</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="row mt-3">
+                    <div class="col-md-6">
+                        <div class="card bg-light">
+                            <div class="card-body text-center">
+                                <h6 class="card-title">Precision</h6>
+                                <h3 class="mb-0">{{ model.precision|floatformat:3 }}</h3>
+                                <p class="text-muted small mb-0">Précision moyenne</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card bg-light">
+                            <div class="card-body text-center">
+                                <h6 class="card-title">Recall</h6>
+                                <h3 class="mb-0">{{ model.recall|floatformat:3 }}</h3>
+                                <p class="text-muted small mb-0">Rappel moyen</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% else %}
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="card bg-light">
+                            <div class="card-body text-center">
+                                <h6 class="card-title">R² Score</h6>
+                                <h3 class="mb-0">{{ model.r2_score|floatformat:3 }}</h3>
+                                <p class="text-muted small mb-0">Coefficient de détermination</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card bg-light">
+                            <div class="card-body text-center">
+                                <h6 class="card-title">MSE</h6>
+                                <h3 class="mb-0">{{ model.mse|floatformat:3 }}</h3>
+                                <p class="text-muted small mb-0">Erreur quadratique moyenne</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="row mt-3">
+                    <div class="col-md-6">
+                        <div class="card bg-light">
+                            <div class="card-body text-center">
+                                <h6 class="card-title">RMSE</h6>
+                                <h3 class="mb-0">{{ model.rmse|floatformat:3 }}</h3>
+                                <p class="text-muted small mb-0">Racine de l'erreur quadratique moyenne</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card bg-light">
+                            <div class="card-body text-center">
+                                <h6 class="card-title">MAE</h6>
+                                <h3 class="mb-0">{{ model.mae|floatformat:3 }}</h3>
+                                <p class="text-muted small mb-0">Erreur absolue moyenne</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-cogs me-2"></i>Paramètres du modèle
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if model.parameters %}
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th>Paramètre</th>
+                                <th>Valeur</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for param, value in model.parameters.items %}
+                            <tr>
+                                <td>{{ param }}</td>
+                                <td>{{ value }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <p class="text-muted">Aucun paramètre disponible.</p>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="card mt-4">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-chart-bar me-2"></i>Actions
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    <a href="{% url 'versionning:model_results' model.id %}" class="btn btn-primary">
+                        <i class="fas fa-chart-line me-2"></i>Voir les résultats
+                    </a>
+                    <a href="{% url 'versionning:model_history' %}" class="btn btn-secondary">
+                        <i class="fas fa-history me-2"></i>Voir l'historique
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 
