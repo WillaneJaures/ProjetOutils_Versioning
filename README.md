@@ -30,7 +30,8 @@ cd ProjetOutils_Versioning
 2. Créer un environnement virtuel :
 ```bash
 python -m venv venv
-source venv/bin/activate
+```
+```bash
 venv\Scripts\activate
 ```
 
