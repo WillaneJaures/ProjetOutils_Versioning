@@ -21,7 +21,9 @@ WILL ETP est une application web Django permettant de charger des données, effe
 
 1. Cloner le repository :
 ```bash
-https://github.com/WillaneJaures/ProjetOutils_Versioning.git
+git clone https://github.com/WillaneJaures/ProjetOutils_Versioning.git
+```
+```bash
 cd ProjetOutils_Versioning
 ```
 
