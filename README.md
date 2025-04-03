@@ -21,15 +21,15 @@ WILL ETP est une application web Django permettant de charger des données, effe
 
 1. Cloner le repository :
 ```bash
-git clone https://github.com/votre-username/will-etp.git
-cd will-etp
+https://github.com/WillaneJaures/ProjetOutils_Versioning.git
+cd ProjetOutils_Versioning
 ```
 
 2. Créer un environnement virtuel :
 ```bash
 python -m venv venv
-source venv/bin/activate  # Linux/Mac
-venv\Scripts\activate     # Windows
+source venv/bin/activate
+venv\Scripts\activate
 ```
 
 3. Installer les dépendances :
